@@ -6,7 +6,7 @@ de trabalho e as convenções básicas do repositório.
 ## Pré-requisitos
 
 - Git
-- Node.js (LTS) e npm — usados para o tooling de lint/format
+- Node.js >= 20 e npm — usados para o tooling de lint/format
 - Editor com suporte a [EditorConfig](https://editorconfig.org/) (a maioria já
   tem suporte nativo ou via extensão)
 
@@ -17,13 +17,19 @@ de trabalho e as convenções básicas do repositório.
    ```sh
    git checkout -b feat/minha-mudanca
    ```
-3. Faça mudanças pequenas e focadas.
-4. Rode lint/format e testes antes de abrir um PR:
+3. Instale as dependências de tooling com `npm ci` (reprodutível).
+4. Faça mudanças pequenas e focadas.
+5. Rode lint/format antes de abrir um PR:
    ```sh
-   npm run lint
    npm run format
+   npm run lint
    ```
-5. Abra um Pull Request descrevendo o problema, a solução e como validar.
+6. Abra um Pull Request descrevendo o problema, a solução e como validar.
+
+> **Testes:** ainda não há suíte de testes. O script `npm test` é um placeholder
+> provisório e não valida nada — não o use como evidência de qualidade. Quando a
+> stack for definida, adicione um runner de testes reais e a etapa
+> correspondente no CI.
 
 ## Convenção de commits
 
@@ -41,7 +47,7 @@ Mantenha o assunto no imperativo e com no máximo ~72 caracteres.
 ## Estilo de código
 
 - Formatação padronizada por Prettier (`.prettierrc.json`).
-- Lint por ESLint (`eslint.config.js`) quando aplicável à stack.
+- Lint por ESLint (`eslint.config.js`), hoje com a config recomendada de JS.
 - Indentação de 2 espaços, fim de linha LF, sem espaços ao final das linhas
   (ver `.editorconfig`).
 

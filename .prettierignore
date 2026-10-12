@@ -1,7 +1,9 @@
+.git
 dist
 build
 out
 coverage
 node_modules
+package-lock.json
 *.min.js
 *.min.css

@@ -15,7 +15,7 @@ sem assumir dependências de linguagem além do necessário.
 ```text
 .
 ├── .github/
-│   └── workflows/     # Pipelines de CI (lint, format check, testes)
+│   └── workflows/     # Pipelines de CI (lint e format check)
 ├── docs/              # Documentação, decisões de arquitetura (ADRs)
 ├── scripts/           # Scripts utilitários (build, setup, automação local)
 ├── src/               # Código-fonte
@@ -30,8 +30,8 @@ sem assumir dependências de linguagem além do necessário.
   parte do artefato final).
 - **docs/** — documentação e decisões arquiteturais. Decisões relevantes devem
   ser registradas como ADRs em `docs/adr/`.
-- **.github/workflows/** — CI. Hoje apenas lint/format/test; deve evoluir junto
-  com a stack.
+- **.github/workflows/** — CI. Hoje apenas lint/format; deve evoluir junto com a
+  stack (test/build).
 
 ## Arquivos de governança e tooling
 
@@ -41,14 +41,15 @@ sem assumir dependências de linguagem além do necessário.
 | `.gitattributes`           | Normaliza fim de linha (LF) e marca binários       |
 | `.gitignore`               | Ignora dependências, builds, envs e caches         |
 | `.prettierrc.json`         | Regras de formatação                               |
+| `.prettierignore`          | Exclui lockfile, `.git`, builds e artefatos        |
 | `eslint.config.js`         | Regras de lint (flat config, ESM)                  |
 | `package-lock.json`        | Lockfile versionado para instalações reprodutíveis |
 | `.github/workflows/ci.yml` | Pipeline de integração contínua                    |
 
 ## Tooling instalado
 
-O repositório já declara as ferramentas de lint/format como `devDependencies`
-do `package.json`:
+O repositório declara as ferramentas de lint/format como `devDependencies` do
+`package.json`:
 
 - `eslint` + `@eslint/js` — lint (flat config em `eslint.config.js`).
 - `prettier` — formatação.
@@ -57,8 +58,9 @@ do `package.json`:
 interpretado como ESM. O `package-lock.json` é versionado e o CI usa `npm ci`
 para builds reprodutíveis.
 
-Ainda não há dependências de runtime nem stack de aplicação definida; o script
-`test` é um placeholder até que exista suíte de testes.
+Não há dependências de runtime nem stack de aplicação definida; o script `test`
+é um placeholder provisório **sem testes reais** e por isso não é executado pelo
+CI até que exista uma suíte de testes.
 
 ## Decisões
 
@@ -67,7 +69,9 @@ Ainda não há dependências de runtime nem stack de aplicação definida; o scr
 - **Dependências apenas de tooling** (lint/format). Dependências de runtime
   serão definidas junto com a stack da aplicação.
 - **Sem código de aplicação**: diretórios vazios são mantidos versionados via
-  `.gitkeep`.
+  `.gitkeep` (removido quando o diretório passa a ter conteúdo real).
+- **Sem etapa de testes no CI** enquanto não houver testes reais: evita um
+  pipeline "verde" fictício.
 
 ## Estratégia de evolução
 
@@ -85,10 +89,12 @@ Migrar para workspaces:
 
 - Usar `npm ci` com lockfile versionado (já adotado).
 - Adicionar cache de dependências e matriz de versões de runtime.
-- Quebrar o CI em jobs de lint, test e (quando aplicável) build.
+- Quebrar o CI em jobs de lint, test e (quando aplicável) build **quando
+  existirem testes/build reais**.
 
 ### Qualidade
 
-- Ativar regras de lint específicas da stack.
+- Ativar regras de lint específicas da stack e considerar `eslint-config-prettier`
+  para evitar regras conflitantes com a formatação.
 - Adicionar cobertura de testes e limites mínimos.
 - Automatizar convenção de commits (ex.: commitlint) e changelog.
