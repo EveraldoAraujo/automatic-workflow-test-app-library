@@ -10,8 +10,14 @@ export class TodoService {
   private readonly _todos = signal<Todo[]>([]);
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
-  /** Monotonic token used to discard stale responses (race conditions). */
+  /** Monotonic token used to discard stale load responses (race conditions). */
   private requestToken = 0;
+  /**
+   * Incremented on every optimistic mutation. A `load()` that started before a
+   * mutation resolves must not overwrite that pending mutation, so the response
+   * is discarded when the generation changed in the meantime.
+   */
+  private mutationGeneration = 0;
 
   readonly todos = this._todos.asReadonly();
   readonly loading = this._loading.asReadonly();
@@ -21,11 +27,14 @@ export class TodoService {
   /** Loads the collection from the API, discarding any stale in-flight result. */
   async load(): Promise<void> {
     const token = ++this.requestToken;
+    const generation = this.mutationGeneration;
     this._loading.set(true);
     this._error.set(null);
     try {
       const todos = await firstValueFrom(this.api.list());
-      if (token !== this.requestToken) {
+      // Discard if a newer load replaced us, or if a mutation happened while
+      // the request was in flight (its optimistic state must win).
+      if (token !== this.requestToken || generation !== this.mutationGeneration) {
         return;
       }
       this._todos.set(todos);
@@ -53,6 +62,7 @@ export class TodoService {
       title: trimmed,
       completed: false,
     };
+    this.mutationGeneration++;
     this._todos.update((todos) => [...todos, optimistic]);
     this._error.set(null);
 
@@ -74,6 +84,7 @@ export class TodoService {
     }
 
     const nextCompleted = !current.completed;
+    this.mutationGeneration++;
     this._todos.update((todos) =>
       todos.map((todo) => (todo.id === id ? { ...todo, completed: nextCompleted } : todo)),
     );
@@ -98,6 +109,7 @@ export class TodoService {
     }
     const current = this._todos()[index];
 
+    this.mutationGeneration++;
     this._todos.update((todos) => todos.filter((todo) => todo.id !== id));
     this._error.set(null);
 

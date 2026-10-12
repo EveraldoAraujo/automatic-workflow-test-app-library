@@ -1,7 +1,18 @@
+import { config as loadDotenv } from 'dotenv';
+
 export interface AppConfig {
   port: number;
   nodeEnv: 'development' | 'production' | 'test';
   corsOrigins: string[];
+}
+
+/**
+ * Loads `.env` into `process.env` (no-op if the file is absent).
+ * Exported so entrypoints control when this happens; tests that pass an
+ * explicit `env` object are unaffected.
+ */
+export function loadEnvFile(): void {
+  loadDotenv({ quiet: true });
 }
 
 /**

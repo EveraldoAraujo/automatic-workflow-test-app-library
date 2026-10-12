@@ -177,4 +177,25 @@ describe('TodoService', () => {
 
     expect(service.pendingCount()).toBe(1);
   });
+
+  it('should not let an in-flight load overwrite a pending optimistic add', async () => {
+    const load = service.load();
+    const listReq = http.expectOne(API);
+
+    // An optimistic add happens while the list request is still in flight.
+    const add = service.add('Nova');
+    const postReq = http.expectOne(API);
+    expect(service.todos().length).toBe(1);
+
+    // The (now stale) list response resolves after the mutation started: it
+    // must not erase the optimistic item.
+    listReq.flush([]);
+    await load;
+    expect(service.todos().map((t) => t.title)).toEqual(['Nova']);
+
+    // The server confirms the creation.
+    postReq.flush({ id: 'server-1', title: 'Nova', completed: false });
+    await add;
+    expect(service.todos().map((t) => t.id)).toEqual(['server-1']);
+  });
 });

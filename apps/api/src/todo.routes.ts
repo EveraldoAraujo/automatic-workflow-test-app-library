@@ -6,8 +6,8 @@ import {
   type RequestHandler,
   type Response,
 } from 'express';
-import type { ZodType } from 'zod';
-import { createTodoSchema, updateTodoSchema } from '@mono/shared';
+import { z } from 'zod';
+import { createTodoSchema, todoSchema, updateTodoSchema } from '@mono/shared';
 import { badRequest, notFound } from './errors.js';
 import type { TodoRepository } from './todo.repository.js';
 
@@ -29,12 +29,17 @@ function asyncHandler(
 }
 
 /** Validates a payload against a schema, throwing a 400 with field details. */
-function parseOrThrow<T>(schema: ZodType<T>, value: unknown): T {
+function parseOrThrow<T>(schema: z.ZodType<T>, value: unknown): T {
   const result = schema.safeParse(value);
   if (!result.success) {
     throw badRequest('Invalid request payload', result.error.flatten());
   }
   return result.data;
+}
+
+/** Validates a response body against the shared contract before sending it. */
+function sendTodo(res: Response, todo: unknown, status = 200): void {
+  res.status(status).json(parseOrThrow(todoSchema, todo));
 }
 
 /** Normalises an Express route param (may be an array in some typings). */
@@ -49,7 +54,8 @@ export function createTodoRouter(repository: TodoRepository): Router {
   router.get(
     '/',
     asyncHandler((_req, res) => {
-      res.json(repository.list());
+      const todos = parseOrThrow(z.array(todoSchema), repository.list());
+      res.json(todos);
     }),
   );
 
@@ -62,7 +68,7 @@ export function createTodoRouter(repository: TodoRepository): Router {
         title: input.title,
         completed: false,
       });
-      res.status(201).json(todo);
+      sendTodo(res, todo, 201);
     }),
   );
 
@@ -74,7 +80,7 @@ export function createTodoRouter(repository: TodoRepository): Router {
       if (!todo) {
         throw notFound();
       }
-      res.json(todo);
+      sendTodo(res, todo);
     }),
   );
 

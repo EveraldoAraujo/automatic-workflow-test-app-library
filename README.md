@@ -12,17 +12,24 @@ O lockfile é único e vive na raiz (`package-lock.json`); os workspaces são re
 por nome via symlinks do npm (sem paths relativos improvisados).
 
 `@mono/shared` **gera artefato de build** (`dist/` com JS + `.d.ts`) consumido pelos
-demais workspaces — ver `packages/shared/tsconfig.build.json`. Os scripts `build`,
-`test`, `dev` e `start` dos apps rodam `pre*` hooks que compilam o `@mono/shared`
-antes, garantindo resolução consistente sem passos manuais. O pacote é privado e não
-é publicado; por isso ainda não há versionamento/publicação de pacote.
+demais workspaces — ver `packages/shared/tsconfig.build.json`. A ordem de build é
+garantida de forma explícita e reproduzível:
+
+- o hook `prepare` da raiz compila o `@mono/shared` logo após `npm install`/`npm ci`
+  (portanto um clone limpo já tem o `dist/` antes de qualquer build/test);
+- os scripts raiz `prebuild`, `pretest`, `prelint` e `predev` também compilam o shared
+  antes de orquestrar os demais workspaces;
+- `build` roda em ordem de dependência real: `@mono/shared` → `@mono/api` → `@mono/web`
+  (não depende da ordem topológica implícita de `--workspaces`).
+
+O pacote é privado e não é publicado.
 
 ## Rodando
 
 ```bash
-npm install          # instala todos os workspaces e consolida o lockfile
+npm install          # instala workspaces, compila o shared (hook prepare) e consolida o lockfile
 npm run dev          # sobe web (4200) e api (3000) em paralelo
-npm run build        # build de todos os workspaces (shared -> api/web por dependência)
+npm run build        # shared -> api -> web, em ordem de dependência
 npm test             # testes de todos os workspaces
 npm run lint         # checagem de formatação de todos os workspaces
 ```
@@ -38,15 +45,18 @@ A base URL é resolvida por ambiente via `fileReplacements` do `angular.json`:
 - `development` → `src/environments/environment.development.ts` (`apiBaseUrl: '/api'`, proxy de dev).
 - `production` → `src/environments/environment.production.ts`, que resolve a URL na
   ordem: (1) `globalThis.__API_BASE_URL__` injetado em runtime pelo host, ou
-  (2) o default daquele arquivo. Nada é hardcoded no código da aplicação.
+  (2) o default daquele arquivo (`'/api'`, assumindo que o host faz proxy da API).
+  Nada é hardcoded no código da aplicação.
 
-Para apontar a produção para outro host sem rebuild, injete
+Para apontar a produção para outro host **sem rebuild**, injete
 `<script>window.__API_BASE_URL__ = 'https://api.example.com/api'</script>` antes do bundle.
+Para fixar um host no build, edite o default em `environment.production.ts` e rode
+`ng build --configuration production`.
 
 ## Contrato da API
 
-Base: `/api/todos` (o prefixo `/api` já reserva o espaço para versionamento futuro
-por caminho — ex.: `/api/v2` — ainda não implementado).
+Base: `/api/todos`. O prefixo `/api` reserva o espaço para versionamento por caminho
+(ex.: `/api/v2`) — **roadmap, ainda não implementado**.
 
 | Método | Rota | Sucesso | Erros |
 | --- | --- | --- | --- |
@@ -57,10 +67,12 @@ por caminho — ex.: `/api/v2` — ainda não implementado).
 
 `GET /health` responde `{ "status": "ok" }`.
 
-Payloads validados em runtime com os schemas de `@mono/shared`:
+Entrada **e saída** são validadas em runtime com os schemas de `@mono/shared`
+(`todoSchema`, `createTodoSchema`, `updateTodoSchema`):
 
 - `CreateTodo`: `{ title: string }` — trim, 1..200 caracteres.
 - `UpdateTodo`: `{ title?: string; completed?: boolean }` — ao menos um campo.
+- `Todo` (resposta): `{ id, title, completed }` — validado antes de enviar.
 
 Erros seguem o formato padronizado:
 
@@ -74,7 +86,8 @@ Códigos: `VALIDATION_ERROR`, `INVALID_JSON` (corpo não-JSON → `400`),
 
 ## Variáveis de ambiente (API)
 
-Ver `.env.example`. Principais:
+Ver `.env.example`. A API carrega `.env` no start via `dotenv` (em `loadEnvFile()`),
+então copiar `.env.example` para `.env` é suficiente. Principais:
 
 | Variável | Default | Descrição |
 | --- | --- | --- |
@@ -90,6 +103,8 @@ erros, que usa `config.nodeEnv`).
 
 O workflow em `.github/workflows/ci.yml` roda, em cada push/PR:
 `npm ci` → `npm run lint` → `npm run build` → `npm test`, em todos os workspaces.
+Como o `prepare` da raiz compila o `@mono/shared`, o CI tem o `dist/` do shared
+disponível já após o `npm ci`.
 
 ## Decisões registradas
 
@@ -104,6 +119,10 @@ O workflow em `.github/workflows/ci.yml` roda, em cada push/PR:
 - **Robustez de handlers:** todos os handlers da API passam por um `asyncHandler`
   explícito, garantindo que rejeições assíncronas e `throw` síncronos cheguem ao
   middleware de erros (Express 4 não captura rejeições async por padrão).
+- **Concorrência no web:** `load()` descarta respostas obsoletas por token e também
+  quando uma mutação otimista ocorreu durante a requisição (`mutationGeneration`),
+  evitando que uma listagem em voo sobrescreva estado recém-mutado. Mutações usam
+  atualização otimista com rollback (inclusive reposicionando o item removido).
 
 ## Estrutura
 

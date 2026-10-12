@@ -1,3 +1,4 @@
+import { todoSchema } from '@mono/shared';
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from './app.js';
@@ -101,6 +102,26 @@ describe('Todos API', () => {
     const res = await request(app).get('/api/todos').set('Origin', 'https://evil.example.com');
     expect(res.status).toBe(403);
     expect(res.body.code).toBe('CORS_FORBIDDEN');
+  });
+
+  it('sets helmet security headers and hides x-powered-by', async () => {
+    const res = await request(app).get('/api/todos');
+    expect(res.headers['x-content-type-options']).toBe('nosniff');
+    expect(res.headers['x-powered-by']).toBeUndefined();
+  });
+});
+
+describe('Todos API (response contract)', () => {
+  it('GET and POST responses satisfy the shared todoSchema', async () => {
+    const app = createApp({ config: testConfig });
+    const created = await request(app).post('/api/todos').send({ title: 'Contrato' });
+    expect(todoSchema.safeParse(created.body).success).toBe(true);
+
+    const list = await request(app).get('/api/todos');
+    expect(list.status).toBe(200);
+    for (const item of list.body) {
+      expect(todoSchema.safeParse(item).success).toBe(true);
+    }
   });
 });
 

@@ -1,5 +1,8 @@
 import { createApp } from './app.js';
-import { loadConfig } from './config.js';
+import { loadConfig, loadEnvFile } from './config.js';
+
+// Load `.env` (if present) before reading the configuration.
+loadEnvFile();
 
 const config = loadConfig();
 const app = createApp({ config });
