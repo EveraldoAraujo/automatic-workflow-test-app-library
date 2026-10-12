@@ -37,6 +37,7 @@ sem assumir dependências de linguagem além do necessário.
 
 | Arquivo                    | Papel                                              |
 | -------------------------- | -------------------------------------------------- |
+| `.nvmrc`                   | Versão de Node recomendada                         |
 | `.editorconfig`            | Padroniza indentação, EOL e charset entre editors  |
 | `.gitattributes`           | Normaliza fim de linha (LF) e marca binários       |
 | `.gitignore`               | Ignora dependências, builds, envs e caches         |
@@ -49,7 +50,7 @@ sem assumir dependências de linguagem além do necessário.
 ## Tooling instalado
 
 O repositório declara as ferramentas de lint/format como `devDependencies` do
-`package.json`:
+`package.json`, com versões estáveis e reais (`eslint`/`@eslint/js` na linha 9):
 
 - `eslint` + `@eslint/js` — lint (flat config em `eslint.config.js`).
 - `eslint-config-prettier` — desativa regras do ESLint que conflitam com o
@@ -65,9 +66,10 @@ O `package-lock.json` é versionado e **gerado a partir do `package.json`** com
 inconsistente com o `package.json` faz o `npm ci` falhar (EUSAGE), então ao
 alterar dependências regenere o lockfile antes de commitar.
 
-Não há dependências de runtime nem stack de aplicação definida; o script `test`
-é um placeholder provisório **sem testes reais** e por isso não é executado pelo
-CI até que exista uma suíte de testes.
+Não há dependências de runtime nem stack de aplicação definida. Também **não
+existe script `test`**: como não há testes reais, optou-se pela ausência
+explícita em vez de um placeholder que passaria sem validar nada. O CI não
+executa testes enquanto não existir uma suíte real.
 
 ## Decisões
 
@@ -77,8 +79,12 @@ CI até que exista uma suíte de testes.
   serão definidas junto com a stack da aplicação.
 - **Sem código de aplicação**: diretórios vazios são mantidos versionados via
   `.gitkeep` (removido quando o diretório passa a ter conteúdo real).
-- **Sem etapa de testes no CI** enquanto não houver testes reais: evita um
-  pipeline "verde" fictício. O CI roda apenas `format:check` e `lint`.
+- **Sem script de teste nem etapa de testes no CI** enquanto não houver testes
+  reais: evita um pipeline "verde" fictício. O CI roda apenas `format:check` e
+  `lint`.
+- **`package-lock.json` ignorado pelo Prettier**: é um JSON gerado pelo npm e
+  não deve ser reformatado; a consistência com o `package.json` é garantida pelo
+  `npm ci` no CI, não pela formatação.
 
 ## Estratégia de evolução
 
@@ -97,7 +103,8 @@ Migrar para workspaces:
 - Usar `npm ci` com lockfile versionado (já adotado).
 - Adicionar cache de dependências e matriz de versões de runtime.
 - Quebrar o CI em jobs de lint, test e (quando aplicável) build **quando
-  existirem testes/build reais**.
+  existirem testes/build reais**. O script `test` deve ser criado apenas nesse
+  momento, já executando testes de verdade.
 
 ### Qualidade
 

@@ -1,9 +1,11 @@
+# O lockfile é gerado pelo npm e não deve ser reformatado pelo Prettier.
+# A consistência com o package.json é garantida pelo `npm ci` no CI.
+package-lock.json
 .git
 dist
 build
 out
 coverage
 node_modules
-package-lock.json
 *.min.js
 *.min.css

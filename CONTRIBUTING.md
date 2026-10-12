@@ -6,7 +6,8 @@ de trabalho e as convenções básicas do repositório.
 ## Pré-requisitos
 
 - Git
-- Node.js >= 20 e npm — usados para o tooling de lint/format
+- Node.js >= 20 e npm — usados para o tooling de lint/format (a versão
+  recomendada está em [`.nvmrc`](.nvmrc))
 - Editor com suporte a [EditorConfig](https://editorconfig.org/) (a maioria já
   tem suporte nativo ou via extensão)
 
@@ -17,19 +18,21 @@ de trabalho e as convenções básicas do repositório.
    ```sh
    git checkout -b feat/minha-mudanca
    ```
-3. Instale as dependências de tooling com `npm ci` (reprodutível).
+3. Instale as dependências de tooling com `npm ci` (reprodutível; use
+   `npm install` apenas ao alterar dependências, para regenerar o lockfile).
 4. Faça mudanças pequenas e focadas.
 5. Rode lint/format antes de abrir um PR:
    ```sh
    npm run format
    npm run lint
+   npm run format:check
    ```
 6. Abra um Pull Request descrevendo o problema, a solução e como validar.
 
-> **Testes:** ainda não há suíte de testes. O script `npm test` é um placeholder
-> provisório e não valida nada — não o use como evidência de qualidade. Quando a
-> stack for definida, adicione um runner de testes reais e a etapa
-> correspondente no CI.
+> **Testes:** ainda não há suíte de testes. Por isso **não existe script
+> `test`** — preferimos a ausência explícita a um placeholder que passaria sem
+> validar nada. Quando a stack for definida, adicione um runner de testes reais
+> e a etapa correspondente no CI.
 
 ## Convenção de commits
 

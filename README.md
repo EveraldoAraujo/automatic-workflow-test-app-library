@@ -8,7 +8,7 @@ mínimo para manter o código consistente.
 ## Pré-requisitos
 
 - Git
-- Node.js >= 20 e npm
+- Node.js >= 20 e npm (a versão recomendada está em [`.nvmrc`](.nvmrc))
 
 ## Setup
 
@@ -28,18 +28,16 @@ quando precisar alterar dependências.
 
 ## Comandos
 
-| Comando                | Descrição                                          |
-| ---------------------- | -------------------------------------------------- |
-| `npm run lint`         | Roda o ESLint sobre o projeto                      |
-| `npm run format`       | Formata os arquivos com Prettier                   |
-| `npm run format:check` | Verifica a formatação sem alterar arquivos         |
-| `npm test`             | Placeholder provisório — ainda não há testes reais |
+| Comando                | Descrição                                  |
+| ---------------------- | ------------------------------------------ |
+| `npm run lint`         | Roda o ESLint sobre o projeto              |
+| `npm run format`       | Formata os arquivos com Prettier           |
+| `npm run format:check` | Verifica a formatação sem alterar arquivos |
 
-> **Nota:** o script `test` é provisório (`echo ... && exit 0`) e apenas existe
-> para manter a interface de comandos estável. O CI **não** executa esse script
-> enquanto não houver testes reais; ele roda somente `format:check` e `lint`.
-> Quando a stack for definida, adicione um runner de testes e uma etapa
-> correspondente no CI.
+> **Nota:** ainda **não há suíte de testes** e, por isso, **não existe script
+> `test`** — em vez de um placeholder que passaria sem validar nada. O CI roda
+> somente `format:check` e `lint`. Quando a stack for definida, adicione um
+> runner de testes reais e uma etapa correspondente no CI.
 
 ## Estrutura de diretórios
 
