@@ -1,0 +1,67 @@
+<section class="todo">
+  <header class="todo__header">
+    <h1>To-Do List</h1>
+    <p class="todo__counter">{{ pendingCount() }} pendente(s)</p>
+  </header>
+
+  @if (error(); as message) {
+    <p class="todo__error" role="alert">
+      {{ message }}
+      <button type="button" class="todo__dismiss" (click)="dismissError()">Fechar</button>
+    </p>
+  }
+
+  <div class="todo__input">
+    <input
+      type="text"
+      placeholder="O que precisa ser feito?"
+      aria-label="Nova tarefa"
+      [value]="newTodo()"
+      (input)="onInput($any($event.target).value)"
+      (keyup.enter)="addTodo()"
+    />
+    <button type="button" (click)="addTodo()">Adicionar</button>
+  </div>
+
+  <div class="todo__filters">
+    @for (option of filters; track option.value) {
+      <button
+        type="button"
+        [class.is-active]="filter() === option.value"
+        (click)="setFilter(option.value)"
+      >
+        {{ option.label }}
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <p class="todo__loading" aria-live="polite">Carregando tarefas…</p>
+  }
+
+  <ul class="todo__list">
+    @for (todo of visibleTodos(); track todo.id) {
+      <li class="todo__item" [class.is-completed]="todo.completed">
+        <label>
+          <input
+            type="checkbox"
+            [checked]="todo.completed"
+            (change)="toggleTodo(todo.id)"
+            [attr.aria-label]="'Concluir ' + todo.title"
+          />
+          <span>{{ todo.title }}</span>
+        </label>
+        <button
+          type="button"
+          class="todo__remove"
+          (click)="removeTodo(todo.id)"
+          [attr.aria-label]="'Remover ' + todo.title"
+        >
+          Remover
+        </button>
+      </li>
+    } @empty {
+      <li class="todo__empty">Nenhuma tarefa por aqui.</li>
+    }
+  </ul>
+</section>
