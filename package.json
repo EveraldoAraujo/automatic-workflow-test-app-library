@@ -1,0 +1,17 @@
+{
+  "name": "mono",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Estrutura base do repositório mono.",
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "echo \"No tests configured yet\" && exit 0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20"
+  }
+}
