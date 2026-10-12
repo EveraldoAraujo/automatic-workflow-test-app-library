@@ -52,11 +52,18 @@ O repositório declara as ferramentas de lint/format como `devDependencies` do
 `package.json`:
 
 - `eslint` + `@eslint/js` — lint (flat config em `eslint.config.js`).
+- `eslint-config-prettier` — desativa regras do ESLint que conflitam com o
+  Prettier (aplicado por último na config).
 - `prettier` — formatação.
 
 `package.json` define `"type": "module"`, portanto `eslint.config.js` é
-interpretado como ESM. O `package-lock.json` é versionado e o CI usa `npm ci`
-para builds reprodutíveis.
+interpretado como ESM. Os scripts de lint/format usam `--cache` e os artefatos
+de cache (`.eslintcache`, cache do Prettier) são ignorados pelo Git.
+
+O `package-lock.json` é versionado e **gerado a partir do `package.json`** com
+`npm install`; o CI usa `npm ci` para instalações reprodutíveis. Um lockfile
+inconsistente com o `package.json` faz o `npm ci` falhar (EUSAGE), então ao
+alterar dependências regenere o lockfile antes de commitar.
 
 Não há dependências de runtime nem stack de aplicação definida; o script `test`
 é um placeholder provisório **sem testes reais** e por isso não é executado pelo
@@ -71,7 +78,7 @@ CI até que exista uma suíte de testes.
 - **Sem código de aplicação**: diretórios vazios são mantidos versionados via
   `.gitkeep` (removido quando o diretório passa a ter conteúdo real).
 - **Sem etapa de testes no CI** enquanto não houver testes reais: evita um
-  pipeline "verde" fictício.
+  pipeline "verde" fictício. O CI roda apenas `format:check` e `lint`.
 
 ## Estratégia de evolução
 
@@ -94,7 +101,7 @@ Migrar para workspaces:
 
 ### Qualidade
 
-- Ativar regras de lint específicas da stack e considerar `eslint-config-prettier`
-  para evitar regras conflitantes com a formatação.
+- Ativar regras de lint específicas da stack (o `eslint-config-prettier` já está
+  configurado para evitar conflitos com a formatação).
 - Adicionar cobertura de testes e limites mínimos.
 - Automatizar convenção de commits (ex.: commitlint) e changelog.

@@ -6,15 +6,16 @@
   "description": "Estrutura base do repositório mono.",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "lint": "eslint --cache .",
+    "format": "prettier --cache --write .",
+    "format:check": "prettier --cache --check .",
     "test": "echo \"No tests configured yet\" && exit 0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.13.0",
-    "eslint": "^9.13.0",
-    "prettier": "^3.3.3"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.10"
   },
   "engines": {
     "node": ">=20"

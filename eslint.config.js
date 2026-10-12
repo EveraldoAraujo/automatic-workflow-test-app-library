@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import prettier from 'eslint-config-prettier';
 
 export default [
   {
@@ -8,6 +9,8 @@ export default [
       'out/**',
       'coverage/**',
       'node_modules/**',
+      '.github/**',
+      '**/*.min.js',
     ],
   },
   js.configs.recommended,
@@ -22,4 +25,6 @@ export default [
       'no-console': 'off',
     },
   },
+  // Deve ficar por último: desliga regras do ESLint que conflitam com o Prettier.
+  prettier,
 ];

@@ -18,10 +18,12 @@ cd mono
 npm ci
 ```
 
-O único propósito das dependências declaradas hoje é **tooling de
-lint/format**. Não há dependências de runtime, stack de aplicação nem suíte de
-testes. O `package-lock.json` é versionado para garantir instalações
-reprodutíveis — use `npm ci` em ambientes limpos/CI e `npm install` apenas
+O único propósito das dependências declaradas hoje é **tooling de lint/format**
+(ESLint, Prettier e `eslint-config-prettier`). Não há dependências de runtime,
+stack de aplicação nem suíte de testes. O `package-lock.json` é versionado e
+gerado a partir do `package.json` com `npm install` — garanta que ele esteja
+consistente antes de commitar, pois `npm ci` falha se o lockfile divergir do
+`package.json`. Use `npm ci` em ambientes limpos/CI e `npm install` apenas
 quando precisar alterar dependências.
 
 ## Comandos
