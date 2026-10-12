@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Estrutura base do repositório mono.",
   "license": "MIT",
+  "packageManager": "npm@11.6.2",
   "scripts": {
     "lint": "eslint --cache .",
     "format": "prettier --cache --write .",
@@ -14,9 +15,10 @@
     "@eslint/js": "^9.39.5",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
+    "globals": "^15.15.0",
     "prettier": "^3.9.10"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.19.0"
   }
 }

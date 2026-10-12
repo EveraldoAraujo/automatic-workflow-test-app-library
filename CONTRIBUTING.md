@@ -6,7 +6,7 @@ de trabalho e as convenções básicas do repositório.
 ## Pré-requisitos
 
 - Git
-- Node.js >= 20 e npm — usados para o tooling de lint/format (a versão
+- Node.js >= 20.19 e npm — usados para o tooling de lint/format (a versão
   recomendada está em [`.nvmrc`](.nvmrc))
 - Editor com suporte a [EditorConfig](https://editorconfig.org/) (a maioria já
   tem suporte nativo ou via extensão)

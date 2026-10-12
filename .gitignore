@@ -34,6 +34,6 @@ coverage/
 Thumbs.db
 
 # Caches
+# Observação: o cache do Prettier v3 vive em node_modules/.cache/prettier.
 .cache/
 .eslintcache
-.prettiercache

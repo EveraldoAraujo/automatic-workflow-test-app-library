@@ -33,6 +33,10 @@ sem assumir dependências de linguagem além do necessário.
 - **.github/workflows/** — CI. Hoje apenas lint/format; deve evoluir junto com a
   stack (test/build).
 
+Diretórios ainda sem conteúdo real (`src/`, `tests/`, `scripts/`) são mantidos
+versionados via `.gitkeep`. `docs/` já contém documentação e por isso não usa
+`.gitkeep`.
+
 ## Arquivos de governança e tooling
 
 | Arquivo                    | Papel                                              |
@@ -50,21 +54,29 @@ sem assumir dependências de linguagem além do necessário.
 ## Tooling instalado
 
 O repositório declara as ferramentas de lint/format como `devDependencies` do
-`package.json`, com versões estáveis e reais (`eslint`/`@eslint/js` na linha 9):
+`package.json`, com **versões estáveis e reais** (`eslint`/`@eslint/js` na linha
+9, `globals` na linha 15):
 
 - `eslint` + `@eslint/js` — lint (flat config em `eslint.config.js`).
+- `globals` — globais de ambiente (`node`, `browser`) usados na configuração do
+  ESLint, evitando falsos positivos de `no-undef` quando houver código.
 - `eslint-config-prettier` — desativa regras do ESLint que conflitam com o
   Prettier (aplicado por último na config).
 - `prettier` — formatação.
 
 `package.json` define `"type": "module"`, portanto `eslint.config.js` é
-interpretado como ESM. Os scripts de lint/format usam `--cache` e os artefatos
-de cache (`.eslintcache`, cache do Prettier) são ignorados pelo Git.
+interpretado como ESM. Os scripts de lint/format usam `--cache`; o
+`.eslintcache` é ignorado pelo Git (o cache do Prettier v3 vive em
+`node_modules/.cache/prettier`, já coberto por `node_modules/`).
+
+`package.json` também fixa `engines.node` (`>=20.19.0`) e `packageManager`
+(npm), alinhados ao `.nvmrc`.
 
 O `package-lock.json` é versionado e **gerado a partir do `package.json`** com
 `npm install`; o CI usa `npm ci` para instalações reprodutíveis. Um lockfile
-inconsistente com o `package.json` faz o `npm ci` falhar (EUSAGE), então ao
-alterar dependências regenere o lockfile antes de commitar.
+inconsistente com o `package.json` faz o `npm ci` falhar (EUSAGE); ao alterar
+dependências, regenere o lockfile antes de commitar. O fluxo
+`npm ci && npm run lint && npm run format:check` foi validado localmente.
 
 Não há dependências de runtime nem stack de aplicação definida. Também **não
 existe script `test`**: como não há testes reais, optou-se pela ausência
@@ -110,5 +122,7 @@ Migrar para workspaces:
 
 - Ativar regras de lint específicas da stack (o `eslint-config-prettier` já está
   configurado para evitar conflitos com a formatação).
+- Revisar os `ignores` do `eslint.config.js` ao adicionar novos tipos de arquivo
+  (ex.: JS embutido em `docs/` ou configs na raiz).
 - Adicionar cobertura de testes e limites mínimos.
 - Automatizar convenção de commits (ex.: commitlint) e changelog.
