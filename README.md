@@ -8,15 +8,21 @@ consistente.
 ## Pré-requisitos
 
 - Git
-- Node.js >= 20 e npm (para o tooling de lint/format)
+- Node.js >= 20 e npm
 
 ## Setup
 
 ```sh
 git clone <url-do-repo>
 cd mono
-npm install
+npm ci
 ```
+
+O `package-lock.json` é versionado para garantir instalações reprodutíveis
+(use `npm install` apenas quando precisar alterar dependências). Não há
+dependências de runtime nem stack de aplicação definida ainda: as
+`devDependencies` cobrem apenas lint/format (`eslint`, `@eslint/js`,
+`prettier`).
 
 ## Comandos
 
@@ -29,7 +35,7 @@ npm install
 
 ## Estrutura de diretórios
 
-```
+```text
 .
 ├── .github/workflows/   # Pipelines de CI
 ├── docs/                # Documentação e decisões de arquitetura
@@ -40,7 +46,8 @@ npm install
 ├── .gitignore           # Artefatos ignorados pelo Git
 ├── eslint.config.js     # Configuração do ESLint
 ├── .prettierrc.json     # Configuração do Prettier
-└── package.json         # Scripts e metadados
+├── package-lock.json    # Lockfile (instalações reprodutíveis)
+└── package.json         # Scripts e dependências
 ```
 
 Detalhes sobre o layout e a estratégia de evolução estão em

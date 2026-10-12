@@ -2,6 +2,7 @@
   "name": "mono",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Estrutura base do repositório mono.",
   "license": "MIT",
   "scripts": {
@@ -10,7 +11,11 @@
     "format:check": "prettier --check .",
     "test": "echo \"No tests configured yet\" && exit 0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "eslint": "^9.13.0",
+    "prettier": "^3.3.3"
+  },
   "engines": {
     "node": ">=20"
   }

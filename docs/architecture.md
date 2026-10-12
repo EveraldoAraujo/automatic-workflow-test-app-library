@@ -2,7 +2,7 @@
 
 Este documento descreve a organização de pastas do repositório `mono` e a
 estratégia de evolução. Ele é intencionalmente leve: no estado atual não há
-código de aplicação nem stack definida.
+código de aplicação nem stack confirmada.
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ sem assumir dependências de linguagem além do necessário.
 
 ## Layout de diretórios
 
-```
+```text
 .
 ├── .github/
 │   └── workflows/     # Pipelines de CI (lint, format check, testes)
@@ -35,21 +35,37 @@ sem assumir dependências de linguagem além do necessário.
 
 ## Arquivos de governança e tooling
 
-| Arquivo                    | Papel                                            |
-| -------------------------- | ------------------------------------------------ |
-| `.editorconfig`            | Padroniza indentação, EOL e charset entre editors |
-| `.gitattributes`           | Normaliza fim de linha (LF) e marca binários     |
-| `.gitignore`               | Ignora dependências, builds, envs e caches       |
-| `.prettierrc.json`         | Regras de formatação                             |
-| `eslint.config.js`         | Regras de lint (flat config)                     |
-| `.github/workflows/ci.yml` | Pipeline de integração contínua                  |
+| Arquivo                    | Papel                                              |
+| -------------------------- | -------------------------------------------------- |
+| `.editorconfig`            | Padroniza indentação, EOL e charset entre editors  |
+| `.gitattributes`           | Normaliza fim de linha (LF) e marca binários       |
+| `.gitignore`               | Ignora dependências, builds, envs e caches         |
+| `.prettierrc.json`         | Regras de formatação                               |
+| `eslint.config.js`         | Regras de lint (flat config, ESM)                  |
+| `package-lock.json`        | Lockfile versionado para instalações reprodutíveis |
+| `.github/workflows/ci.yml` | Pipeline de integração contínua                    |
+
+## Tooling instalado
+
+O repositório já declara as ferramentas de lint/format como `devDependencies`
+do `package.json`:
+
+- `eslint` + `@eslint/js` — lint (flat config em `eslint.config.js`).
+- `prettier` — formatação.
+
+`package.json` define `"type": "module"`, portanto `eslint.config.js` é
+interpretado como ESM. O `package-lock.json` é versionado e o CI usa `npm ci`
+para builds reprodutíveis.
+
+Ainda não há dependências de runtime nem stack de aplicação definida; o script
+`test` é um placeholder até que exista suíte de testes.
 
 ## Decisões
 
 - **Layout flat na raiz** por enquanto: um único pacote lógico. Evita a
   complexidade de workspaces antes de existir mais de um pacote.
-- **Sem lockfile/dependências fixadas** até que a stack seja confirmada. O CI
-  usa `npm install` para não exigir um lockfile prematuro.
+- **Dependências apenas de tooling** (lint/format). Dependências de runtime
+  serão definidas junto com a stack da aplicação.
 - **Sem código de aplicação**: diretórios vazios são mantidos versionados via
   `.gitkeep`.
 
@@ -67,7 +83,7 @@ Migrar para workspaces:
 
 ### Robustez do CI
 
-- Fixar versões de dependências com lockfile assim que a stack for definida.
+- Usar `npm ci` com lockfile versionado (já adotado).
 - Adicionar cache de dependências e matriz de versões de runtime.
 - Quebrar o CI em jobs de lint, test e (quando aplicável) build.
 
