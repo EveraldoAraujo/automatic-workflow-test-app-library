@@ -1,9 +1,0 @@
-.app-shell {
-  min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1rem;
-  box-sizing: border-box;
-  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
-}

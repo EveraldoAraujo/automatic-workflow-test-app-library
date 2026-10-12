@@ -1,73 +1,82 @@
-# mono — Angular To-Do List
+# mono
 
-Aplicação Angular (standalone components) que implementa uma **to-do list** simples,
-com estado local gerenciado por Angular Signals.
+Monorepo (npm workspaces) para a aplicação de to-do list, composto por:
 
-## Funcionalidades
+| Pacote | Caminho | Descrição |
+| --- | --- | --- |
+| `@mono/web` | `apps/web` | App Angular 22 (standalone, Signals) com a to-do list. |
+| `@mono/api` | `apps/api` | API HTTP REST (Express + TypeScript) para todos. |
+| `@mono/shared` | `packages/shared` | Tipos/contratos e schemas de validação (zod) compartilhados. |
 
-- Adicionar tarefas (título é aparado; entradas vazias são ignoradas).
-- Marcar/desmarcar tarefas como concluídas.
-- Remover tarefas.
-- Contador de tarefas pendentes.
-- Filtro de visualização: **Todas**, **Ativas** e **Concluídas**.
+O lockfile é único e vive na raiz (`package-lock.json`); os workspaces são resolvidos
+por nome via symlinks do npm (sem paths relativos improvisados).
 
-## Pré-requisitos
-
-- Node.js 20+ (testado com Node 24)
-- npm 11+
-
-## Instalação
+## Rodando
 
 ```bash
-npm install
+npm install          # instala todos os workspaces e consolida o lockfile
+npm run dev          # sobe web (4200) e api (3000) em paralelo
+npm run build        # build de todos os workspaces
+npm test             # testes de todos os workspaces
+npm run lint         # checagem de formatação de todos os workspaces
 ```
 
-## Executar em desenvolvimento
+Para rodar um pacote isolado: `npm run <script> -w @mono/web|@mono/api|@mono/shared`.
 
-```bash
-npm start
-# ou
-npx ng serve
+O dev server do web faz proxy de `/api` para `http://localhost:3000` (apps/web/proxy.conf.json).
+
+## Contrato da API
+
+Base: `/api/todos` (versionamento previsto via prefixo de rota).
+
+| Método | Rota | Sucesso | Erros |
+| --- | --- | --- | --- |
+| `GET` | `/api/todos` | `200` lista de todos | — |
+| `POST` | `/api/todos` | `201` todo criado | `400` payload inválido |
+| `PATCH` | `/api/todos/:id` | `200` todo atualizado | `400` payload inválido, `404` id inexistente |
+| `DELETE` | `/api/todos/:id` | `204` sem corpo | `404` id inexistente |
+
+`GET /health` responde `{ "status": "ok" }`.
+
+Payloads validados em runtime com os schemas de `@mono/shared`:
+
+- `CreateTodo`: `{ title: string }` — trim, 1..200 caracteres.
+- `UpdateTodo`: `{ title?: string; completed?: boolean }` — ao menos um campo.
+
+Erros seguem o formato padronizado:
+
+```json
+{ "code": "VALIDATION_ERROR", "message": "Invalid request payload", "details": { ... } }
 ```
 
-Acesse `http://localhost:4200/`.
+## Variáveis de ambiente (API)
 
-## Testes
+| Variável | Default | Descrição |
+| --- | --- | --- |
+| `PORT` | `3000` | Porta do servidor. |
+| `NODE_ENV` | `development` | Ambiente; em `production` não vaza stack/detalhes internos. |
+| `CORS_ORIGINS` | `http://localhost:4200` | Allowlist separada por vírgula. `*` é ignorado em produção. |
 
-```bash
-npm test -- --watch=false
-```
+O web resolve a base URL da API por ambiente (`src/environments/`): `/api` em dev
+(proxy) e configurável em produção — nada hardcoded no código.
 
-## Build de produção
+## Decisões registradas
 
-```bash
-npm run build
-```
-
-Os artefatos são gerados em `dist/mono-app`.
+- **Autenticação: ausente nesta fase.** A API é destinada a uso local/dev. Qualquer
+  exposição pública exige autenticação/autorização antes do deploy.
+- **Persistência: em memória (volátil).** Os dados são perdidos ao reiniciar a API.
+  O acesso é isolado atrás de `TodoRepository`, permitindo troca por banco sem
+  alterar a camada HTTP.
+- **Segurança:** `helmet`, `cors` com allowlist, `express.json({ limit: '100kb' })`,
+  rate limit básico e middleware central de erros com status corretos
+  (400/404/500) e sem stack trace em produção.
 
 ## Estrutura
 
 ```
-src/app/
-├── app.ts                        # AppComponent raiz
-├── app.html
-├── app.css
-├── models/
-│   └── todo.ts                   # interface Todo { id, title, completed }
-├── services/
-│   ├── todo.service.ts           # estado em Signals: add/toggle/remove
-│   └── todo.service.spec.ts
-└── components/
-    └── todo-list/
-        ├── todo-list.ts          # componente standalone (input, lista, filtros)
-        ├── todo-list.html
-        ├── todo-list.css
-        └── todo-list.spec.ts
+apps/
+  web/        # Angular
+  api/        # Express
+packages/
+  shared/     # tipos + schemas zod
 ```
-
-## Tecnologias
-
-- Angular 22 (standalone components + Signals)
-- TypeScript
-- Vitest (via Angular CLI) para testes unitários
