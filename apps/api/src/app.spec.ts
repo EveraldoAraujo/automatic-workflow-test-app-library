@@ -9,6 +9,12 @@ const testConfig: AppConfig = {
   corsOrigins: ['http://localhost:4200'],
 };
 
+const productionConfig: AppConfig = {
+  port: 0,
+  nodeEnv: 'production',
+  corsOrigins: ['https://app.example.com'],
+};
+
 describe('Todos API', () => {
   let app: ReturnType<typeof createApp>;
 
@@ -78,5 +84,70 @@ describe('Todos API', () => {
     const res = await request(app).post('/api/todos').send({ title: 1 });
     expect(res.status).toBe(400);
     expect(JSON.stringify(res.body)).not.toContain('at ');
+  });
+
+  // --- Regression coverage for reviewer blockers -------------------------
+
+  it('returns a standardised 400 for malformed JSON bodies (not 500/HTML)', async () => {
+    const res = await request(app)
+      .post('/api/todos')
+      .set('Content-Type', 'application/json')
+      .send('not-json');
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ code: 'INVALID_JSON', message: 'Malformed JSON body' });
+  });
+
+  it('rejects a disallowed CORS origin with a 403 and standardised body', async () => {
+    const res = await request(app).get('/api/todos').set('Origin', 'https://evil.example.com');
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe('CORS_FORBIDDEN');
+  });
+});
+
+describe('Todos API (production)', () => {
+  let app: ReturnType<typeof createApp>;
+
+  beforeEach(() => {
+    app = createApp({ config: productionConfig });
+  });
+
+  it('keeps 400 responses standardised in production (no stack, no HTML)', async () => {
+    const res = await request(app).post('/api/todos').send({ title: '' });
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('VALIDATION_ERROR');
+    expect(JSON.stringify(res.body)).not.toContain('at ');
+  });
+
+  it('keeps 404 responses standardised in production', async () => {
+    const res = await request(app).patch('/api/todos/missing').send({ completed: true });
+    expect(res.status).toBe(404);
+    expect(res.body.code).toBe('NOT_FOUND');
+  });
+
+  it('returns a generic message for unexpected errors in production', async () => {
+    const repository = {
+      list: () => {
+        throw new Error('secret internal detail');
+      },
+      create: () => {
+        throw new Error('x');
+      },
+      update: () => undefined,
+      remove: () => false,
+    };
+    const prodApp = createApp({ config: productionConfig, repository });
+    const res = await request(prodApp).get('/api/todos');
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({ code: 'INTERNAL_ERROR', message: 'Internal server error' });
+    expect(JSON.stringify(res.body)).not.toContain('secret internal detail');
+  });
+
+  it('rejects malformed JSON in production with a standardised 400', async () => {
+    const res = await request(app)
+      .post('/api/todos')
+      .set('Content-Type', 'application/json')
+      .send('{bad');
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('INVALID_JSON');
   });
 });

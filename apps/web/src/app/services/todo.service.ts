@@ -92,10 +92,11 @@ export class TodoService {
   }
 
   async remove(id: string): Promise<void> {
-    const current = this._todos().find((todo) => todo.id === id);
-    if (!current) {
+    const index = this._todos().findIndex((todo) => todo.id === id);
+    if (index === -1) {
       return;
     }
+    const current = this._todos()[index];
 
     this._todos.update((todos) => todos.filter((todo) => todo.id !== id));
     this._error.set(null);
@@ -103,9 +104,12 @@ export class TodoService {
     try {
       await firstValueFrom(this.api.remove(id));
     } catch {
-      // Restore the removed item at its original position.
-      const snapshot = this._todos();
-      this._todos.set([...snapshot, current]);
+      // Restore the removed item at its original position to preserve ordering.
+      this._todos.update((todos) => {
+        const restored = [...todos];
+        restored.splice(Math.min(index, restored.length), 0, current);
+        return restored;
+      });
       this._error.set('Não foi possível remover a tarefa.');
     }
   }

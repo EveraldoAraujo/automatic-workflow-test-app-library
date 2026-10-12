@@ -25,3 +25,12 @@ export const badRequest = (message: string, details?: unknown) =>
   new HttpError(400, 'VALIDATION_ERROR', message, details);
 
 export const notFound = (message = 'Todo not found') => new HttpError(404, 'NOT_FOUND', message);
+
+/** Error used by the CORS middleware when the origin is not allowlisted. */
+export class CorsError extends Error {
+  readonly code = 'CORS_FORBIDDEN';
+  constructor(origin: string) {
+    super(`Origin ${origin} not allowed by CORS`);
+    this.name = 'CorsError';
+  }
+}

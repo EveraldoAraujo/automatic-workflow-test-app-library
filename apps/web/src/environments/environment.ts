@@ -1,6 +1,14 @@
+/**
+ * Base environment (used as the source for build-time `fileReplacements`).
+ *
+ * The active file is swapped by `angular.json`:
+ *  - `development` -> `environment.development.ts`
+ *  - `production`  -> `environment.production.ts`
+ *
+ * Do not import this file directly in app code; import `./environments/environment`
+ * and let the Angular CLI pick the right variant for the active configuration.
+ */
 export const environment = {
-  production: true,
-  // Overridable at build time through the API_BASE_URL env var; falls back to
-  // a relative path when the API is served behind the same origin.
+  production: false,
   apiBaseUrl: '/api',
 };

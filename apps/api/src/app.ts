@@ -3,7 +3,8 @@ import express, { type Express } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { loadConfig, type AppConfig } from './config.js';
-import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
+import { CorsError } from './errors.js';
+import { createErrorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { InMemoryTodoRepository, type TodoRepository } from './todo.repository.js';
 import { createTodoRouter } from './todo.routes.js';
 
@@ -28,7 +29,9 @@ export function createApp(options: CreateAppOptions = {}): Express {
           callback(null, true);
           return;
         }
-        callback(new Error(`Origin ${origin} not allowed by CORS`));
+        // Reject without echoing the origin; the central handler maps the
+        // typed error to a 403 with a standardised body.
+        callback(new CorsError(origin));
       },
     }),
   );
@@ -48,7 +51,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
   app.use('/api/todos', apiLimiter, createTodoRouter(repository));
 
   app.use(notFoundHandler);
-  app.use(errorHandler);
+  app.use(createErrorHandler(config));
 
   return app;
 }
